@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>悲しいあなたへのおくすり手帳</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #e3f2ff 0, #f4f5f7 45%, #e9ecf5 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 840px;
+      background: #fafafa;
+      border-radius: 28px;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transform: translateZ(0);
+    }
+
+    /* ノート風背景 */
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(
+        to bottom,
+        rgba(200, 210, 230, 0.25) 1px,
+        transparent 1px
+      );
+      background-size: 100% 32px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .header {
+      padding: 16px 20px 10px;
+      background: linear-gradient(135deg, #fdfbff, #f3f7ff);
+      border-bottom: 1px solid #dde3f0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .header-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #7c8bb0;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      color: #8a94b0;
+    }
+
+    /* 青×白カプセルアイコン（ちょっと光る） */
+    .pill-logo-wrap {
+      position: relative;
+      width: 34px;
+      height: 34px;
+    }
+
+    .pill-logo-glow {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(77, 163, 255, 0.4), transparent 60%);
+      opacity: 0.7;
+      filter: blur(4px);
+      animation: pillGlow 2.4s ease-in-out infinite alternate;
+    }
+
+    .pill-logo {
+      position: absolute;
+      inset: 4px;
+      background: linear-gradient(135deg, #4da3ff 50%, #ffffff 50%);
+      border-radius: 999px;
+      border: 2px solid #4da3ff;
+      box-shadow: 0 2px 6px rgba(77, 163, 255, 0.5);
+      transform: rotate(-18deg);
+    }
+
+    .pill-logo::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.7),
+        transparent 40%
+      );
+      mix-blend-mode: screen;
+    }
+
+    @keyframes pillGlow {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      100% { opacity: 0.9; transform: scale(1.05); }
+    }
+
+    .pager-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      padding-bottom: 70px; /* 下の固定ボタン分 */
+      z-index: 1;
+    }
+
+    .pages {
+      display: flex;
+      width: 400%; /* 4ページ */
+      height: 100%;
+      transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .page {
+      width: 25%;
+      padding: 22px 20px 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    /* ページのタブっぽいインジケータ */
+    .page-tabs {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 1;
+    }
+
+    .page-tab {
+      width: 14px;
+      height: 18px;
+      border-radius: 6px 0 0 6px;
+      background: #d7deef;
+      opacity: 0.4;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    .page-tab.active {
+      opacity: 1;
+      transform: translateX(-2px);
+      background: #9fb4ff;
+    }
+
+    /* --- 縦長カード（処方箋風） --- */
+    .card {
+      position: relative;
+      width: 92%;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 16px 16px 18px;
+      box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(230, 235, 245, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+      transform-origin: center;
+      animation: cardEnter 0.45s ease-out;
+    }
+
+    .card::before {
+      content: "処方箋";
+      position: absolute;
+      top: 10px;
+      left: 14px;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #a0a8c0;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      top: 34px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-image: linear-gradient(
+        to right,
+        #d0d7ea 0,
+        #d0d7ea 50%,
+        transparent 50%,
+        transparent 100%
+      );
+      background-size: 8px 1px;
+      opacity: 0.7;
+    }
+
+    @keyframes cardEnter {
+      0% { opacity: 0; transform: translateY(18px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-image {
+      width: 100%;
+      height: 230px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #eee;
+      position: relative;
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.03);
+      transition: transform 0.6s ease-out;
+    }
+
+    .card:hover .card-image img {
+      transform: scale(1.07);
+    }
+
+    .card-main {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .card-dose {
+      font-size: 11px;
+      color: #8a94b0;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    .card-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 6px;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: #9aa3c0;
+    }
+
+    .card-price {
+      font-size: 12px;
+      font-weight: 600;
+      color: #44518a;
+    }
+
+    .card-price span {
+      font-size: 11px;
+      font-weight: 400;
+      color: #9aa3c0;
+      margin-left: 4px;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .order-button {
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #ff9f7b, #ff6b6b);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .order-button::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0.7),
+        transparent
+      );
+      transform: skewX(-20deg);
+      opacity: 0;
+      transition: transform 0.5s, opacity 0.5s;
+    }
+
+    .order-button:hover::after {
+      opacity: 1;
+      transform: translateX(180%) skewX(-20deg);
+    }
+
+    /* ラベルを少し大きく＆存在感アップ */
+    .label-badge {
+      position: absolute;
+      top: 40px;
+      right: 16px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #ffb347, #ff5f6d);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .label-badge::before {
+      content: "¥";
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .label-badge--green {
+      background: linear-gradient(135deg, #4cd964, #2ecc71);
+    }
+
+    /* 固定ボタン（感情の診察に戻る） */
+    .back-button {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 11px 20px;
+      border-radius: 12px;
+      border: none;
+      background: #dfe7ff;
+      color: #3a4a7a;
+      font-size: 13px;
+      font-weight: 600;
+      width: 82%;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 6px 14px rgba(90, 112, 180, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .back-button::before {
+      content: "←";
+      font-size: 13px;
+    }
+
+    /* BGM の小さなインジケータ */
+    .bgm-indicator {
+      position: absolute;
+      bottom: 90px;
+      right: 18px;
+      font-size: 10px;
+      color: #9aa3c0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 5;
+    }
+
+    .bgm-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #8bc6ff;
+      box-shadow: 0 0 8px rgba(139, 198, 255, 0.9);
+      animation: bgmPulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes bgmPulse {
+      0% { transform: scale(0.9); opacity: 0.5; }
+      100% { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ページタブのコンテナ（全体） */
+    .tabs-container {
+      position: absolute;
+      top: 60px;
+      right: 0;
+      bottom: 80px;
+      width: 26px;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1;
+    }
+
+    .tabs-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* スワイプヒント（さりげなく） */
+    .swipe-hint {
+      position: absolute;
+      bottom: 86px;
+      left: 20px;
+      font-size: 10px;
+      color: #a3abc4;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.85;
+    }
+
+    .swipe-hint-arrow {
+      width: 26px;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #c4cbe4, #9fb4ff);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swipe-hint-arrow::after {
+      content: "";
+      position: absolute;
+      left: -40%;
+      top: 0;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, #ffffff);
+      animation: swipeArrow 1.8s infinite;
+    }
+
+    @keyframes swipeArrow {
+      0% { transform: translateX(0); opacity: 0; }
+      30% { opacity: 1; }
+      100% { transform: translateX(180%); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="header-inner">
+        <div class="header-title-block">
+          <div class="header-label">MENTAL PRESCRIPTION NOTE</div>
+          <div class="header-title">不安なあなたへのおくすり</div>
+          <div class="header-sub">今日の気持ちに、そっと効く一杯を処方します。</div>
+        </div>
+        <div class="pill-logo-wrap">
+          <div class="pill-logo-glow"></div>
+          <div class="pill-logo"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="back-button">感情の診察に戻る</button>
+
+    <div class="bgm-indicator">
+      <div class="bgm-dot"></div>
+      <span>やさしいBGM再生中</span>
+    </div>
+
+    <div class="swipe-hint">
+      <div class="swipe-hint-arrow"></div>
+      <span>スワイプで次の処方へ</span>
+    </div>
+
+    <div class="tabs-container">
+      <div class="tabs-inner">
+        <div class="page-tab" data-tab="0"></div>
+        <div class="page-tab" data-tab="1"></div>
+        <div class="page-tab" data-tab="2"></div>
+        <div class="page-tab" data-tab="3"></div>
+      </div>
+    </div>
+
+    <div class="pager-container" id="pager">
+      <div class="pages" id="pages">
+
+        <!-- 1ページ目 -->
+        <div class="page">
+          <div class="card" data-page="0">
+            <div class="label-badge label-badge--green">480</div>
+            <div class="card-image">
+              <img src="https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg?auto=compress&cs=tinysrgb&w=800" />
+            </div>
+            <div class="card-main">
+              <div class="card-title-row">
+                <div class="card-title">ホットミルク</div>
+                <div class="card-dose">処方量：ゆっくり一杯</div>
+              </div>
+              <div class="card-desc">
+                やさしい甘さで、こわばった心をふっとゆるめるおくすりドリンク。
+                眠る前や、考えごとが止まらない夜に。
+              </div>
+              <div class="card-meta-row">
+                <div class="card-meta">ノンカフェイン / ぬくもり / 安心感</div>
+                <div class="card-price">
+                  本日のおくすり代：¥480
+                  <span>（こころの処方費用）</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="order-button">このおくすりを受け取る</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2ページ目 -->
+        <div class="page">
+          <div class="card" data-page="1">
+            <div class="label-badge">520</div>
+            <div class="card-image">
+              <img src="https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=800" />
+            </div>
+            <div class="card-main">
+              <div class="card-title-row">
+                <div class="card-title">カフェラテ</div>
+                <div class="card-dose">処方量：ひと息つきたいときに</div>
+              </div>
+              <div class="card-desc">
+                まろやかなミルクとほろ苦いエスプレッソで、
+                「もう少しだけがんばってみようかな」と思える一杯。
+              </div>
+              <div class="card-meta-row">
+                <div class="card-meta">カフェイン少なめ / ほっと一息 / ほどよい覚醒</div>
+                <div class="card-price">
+                  本日のおくすり代：¥520
+                  <span>（前向きになる処方）</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="order-button">このおくすりを受け取る</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3ページ目 -->
+        <div class="page">
+          <div class="card" data-page="2">
+            <div class="label-badge label-badge--green">560</div>
+            <div class="card-image">
+              <img src="https://images.pexels.com/photos/373888/pexels-photo-373888.jpeg?auto=compress&cs=tinysrgb&w=800" />
+            </div>
+            <div class="card-main">
+              <div class="card-title-row">
+                <div class="card-title">はちみつジンジャーティー</div>
+                <div class="card-dose">処方量：からだが冷えたときに</div>
+              </div>
+              <div class="card-desc">
+                しょうがとはちみつのやさしいブレンドで、
+                からだの奥からじんわりあたためてくれるおくすりティー。
+              </div>
+              <div class="card-meta-row">
+                <div class="card-meta">ノンカフェイン / ぽかぽか / やさしい甘さ</div>
+                <div class="card-price">
+                  本日のおくすり代：¥560
+                  <span>（からだと心の温感処方）</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="order-button">このおくすりを受け取る</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4ページ目 -->
+        <div class="page">
+          <div class="card" data-page="3">
+            <div class="label-badge label-badge--green">540</div>
+            <div class="card-image">
+              <img src="https://images.pexels.com/photos/373888/pexels-photo-373888.jpeg?auto=compress&cs=tinysrgb&w=800" />
+            </div>
+            <div class="card-main">
+              <div class="card-title-row">
+                <div class="card-title">カモミールブレンド</div>
+                <div class="card-dose">処方量：おやすみ前に</div>
+              </div>
+              <div class="card-desc">
+                ふんわり香るハーブが、今日一日のざわざわを静かに沈めてくれる一杯。
+                深呼吸と一緒にどうぞ。
+              </div>
+              <div class="card-meta-row">
+                <div class="card-meta">ノンカフェイン / リラックス / ねむりの準備</div>
+                <div class="card-price">
+                  本日のおくすり代：¥540
+                  <span>（おやすみ前の安らぎ処方）</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button class="order-button">このおくすりを受け取る</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- やさしいBGM（フリー音源） -->
+  <audio id="bgm" loop>
+    <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Komiku/It's_time_for_adventure/Komiku_-_07_-_Friends.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const pagesEl = document.getElementById("pages");
+    const pagerEl = document.getElementById("pager");
+    const tabs = document.querySelectorAll(".page-tab");
+    const cards = document.querySelectorAll(".card");
+    const bgm = document.getElementById("bgm");
+
+    let currentPage = 0;
+    let startX = 0;
+    let isDragging = false;
+    let bgmStarted = false;
+
+    function updateTabs() {
+      tabs.forEach((tab, index) => {
+        tab.classList.toggle("active", index === currentPage);
+      });
+    }
+
+    function animateCard() {
+      cards.forEach((card, index) => {
+        if (index === currentPage) {
+          card.style.animation = "none";
+          void card.offsetWidth;
+          card.style.animation = "cardEnter 0.45s ease-out";
+        }
+      });
+    }
+
+    function updatePage() {
+      const offset = currentPage * -25;
+      pagesEl.style.transform = `translateX(${offset}%)`;
+      updateTabs();
+      animateCard();
+    }
+
+    function handleSwipe(deltaX) {
+      const threshold = 60;
+
+      if (deltaX < -threshold && currentPage < 3) {
+        currentPage++;
+        updatePage();
+      } else if (deltaX > threshold && currentPage > 0) {
+        currentPage--;
+        updatePage();
+      }
+    }
+
+    function startBGMOnce() {
+      if (bgmStarted) return;
+      bgmStarted = true;
+      bgm.volume = 0.25;
+      const playPromise = bgm.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(() => {
+          // ブラウザがブロックした場合は何もしない（ユーザー操作で再度再生される）
+        });
+      }
+    }
+
+    pagerEl.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      isDragging = true;
+      startX = e.touches[0].clientX;
+      startBGMOnce();
+    });
+
+    pagerEl.addEventListener("touchend", (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      const endX = e.changedTouches[0].clientX;
+      handleSwipe(endX - startX);
+    });
+
+    pagerEl.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startBGMOnce();
+    });
+
+    pagerEl.addEventListener("mouseup", (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      handleSwipe(e.clientX - startX);
+    });
+
+    // 初期タブ状態
+    updateTabs();
+  </script>
+</body>
+</html>
