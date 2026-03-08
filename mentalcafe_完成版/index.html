@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>心の診察室 - メンタル処方箋</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* 以前のおしゃれで可愛いスタイルを完全復活 */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    body { background: #eef5ff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+    .app {
+      width: 100%; max-width: 420px; height: 100vh; max-height: 840px;
+      background: #fff; border-radius: 28px; box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+      position: relative; display: flex; flex-direction: column; overflow: hidden;
+      background-image: linear-gradient(#f0f7ff 1px, transparent 1px), linear-gradient(90deg, #f0f7ff 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    /* ストーリー画面：入店エフェクト用 */
+    #welcome-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #fdfaf5; z-index: 100; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; padding: 40px; text-align: center;
+      transition: opacity 1.2s ease, transform 1.2s ease; /* 診察室へ入るエフェクト */
+    }
+    .cafe-logo { font-size: 50px; margin-bottom: 20px; }
+    .story-title { font-size: 18px; font-weight: 700; color: #5a70b4; margin-bottom: 15px; }
+    .story-text { font-size: 13px; line-height: 1.8; color: #666; margin-bottom: 30px; }
+    .enter-btn {
+      padding: 15px 40px; background: linear-gradient(135deg, #7b9fff, #5a70b4); color: white; border-radius: 30px;
+      font-weight: bold; cursor: pointer; border: none; box-shadow: 0 6px 15px rgba(90, 112, 180, 0.3);
+    }
+
+    /* ヘッダー */
+    .header { padding: 15px 20px; border-bottom: 2px solid #e0e9f5; display: flex; justify-content: space-between; align-items: center; background: #fff; z-index: 10; }
+    .header-title { font-size: 14px; font-weight: 700; color: #5a70b4; }
+    
+    .pill-nav { display: flex; align-items: center; gap: 8px; cursor: pointer; position: relative; }
+    .pill-hint { 
+      font-size: 10px; font-weight: bold; color: #fff; background: #4da3ff; 
+      padding: 4px 10px; border-radius: 12px; position: relative;
+      animation: float 3s infinite ease-in-out;
+    }
+    .pill-hint::after {
+      content: ""; position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+      border-width: 5px 0 5px 6px; border-style: solid; border-color: transparent transparent transparent #4da3ff;
+    }
+    @keyframes float { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+    .pill-logo { width: 34px; height: 17px; background: linear-gradient(90deg, #4da3ff 50%, #fff 50%); border-radius: 10px; border: 2px solid #4da3ff; transform: rotate(-15deg); transition: 0.3s; }
+
+    /* 診察エリア */
+    .room { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+    .doc-box { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 15px; min-height: 100px; }
+    .doc-img { font-size: 60px; animation: breathe 3s infinite; }
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .bubble { 
+      background: #fff; border: 2px solid #e0e9f5; padding: 12px; border-radius: 15px; 
+      font-size: 13px; font-weight: 600; color: #4a5a8a; position: relative; flex: 1;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .bubble::after { content: ""; position: absolute; left: -10px; bottom: 10px; border-width: 8px 10px 8px 0; border-style: solid; border-color: transparent #fff transparent transparent; }
+
+    /* モニター */
+    .monitor { width: 100%; position: relative; border: 6px solid #5a70b4; border-radius: 15px; background: #000; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    #video { width: 100%; aspect-ratio: 4/3; object-fit: cover; transform: scaleX(-1); display: block; background: #222; }
+    
+    .scan-log { position: absolute; top: 10px; left: 10px; color: #0f0; font-family: monospace; font-size: 10px; text-shadow: 0 0 5px #000; pointer-events: none; line-height: 1.6; opacity: 0; z-index: 6; }
+    .scanning .scan-log { opacity: 0.9; }
+
+    .doc-whisper { position: absolute; bottom: 10px; right: 10px; color: #fff; font-size: 11px; background: rgba(90, 112, 180, 0.85); padding: 5px 10px; border-radius: 4px; opacity: 0; z-index: 7; font-weight: bold; transition: opacity 0.5s; }
+    .scanning .doc-whisper { opacity: 1; }
+
+    .scan-line { position: absolute; width: 100%; height: 2px; background: #4da3ff; top: -2px; box-shadow: 0 0 15px #4da3ff; display: none; z-index: 5; }
+    .scanning .scan-line { display: block; animation: moveLine 2s infinite linear; }
+    @keyframes moveLine { 0% { top: 0; } 100% { top: 100%; } }
+
+    /* 処方スタンプ */
+    #hanko { position: absolute; right: 20px; bottom: 120px; width: 90px; height: 90px; border: 4px solid #ff5a5a; border-radius: 50%; display: none; align-items: center; justify-content: center; color: #ff5a5a; font-weight: 900; font-size: 22px; transform: rotate(15deg) scale(2); opacity: 0; z-index: 20; background: rgba(255,255,255,0.85); }
+    .stamped #hanko { display: flex; animation: stampDown 0.3s forwards cubic-bezier(0.17, 0.89, 0.32, 1.28); }
+    @keyframes stampDown { to { transform: rotate(15deg) scale(1); opacity: 0.9; } }
+
+    /* 下部エリア */
+    .footer { padding-top: 15px; text-align: center; }
+    #menu { font-size: 16px; font-weight: 700; color: #333; margin: 10px 0; min-height: 24px; }
+    .btn { width: 100%; padding: 16px; border-radius: 15px; border: none; background: linear-gradient(135deg, #7b9fff, #5a70b4); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(90, 112, 180, 0.3); transition: 0.2s; }
+    .btn:disabled { opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <div class="app" id="mainApp">
+    <div id="welcome-screen">
+      <div class="cafe-logo">☕️</div>
+      <h2 class="story-title">Mental Prescription Cafe</h2>
+      <p class="story-text">
+        ようこそ。ここは、あなたの心の表情を読み解き、<br>
+        今一番必要な「ドリンク」を処方するカフェ。<br><br>
+        AIドクターがお顔からストレスを測定し、<br>
+        あなただけの特別な一杯をお選びします。
+      </p>
+      <button class="enter-btn" onclick="enterCafe()">診察室へ入る</button>
+    </div>
+
+    <audio id="bgm" loop>
+      <source src="White_snow_chill_days.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="header">
+      <div class="header-title">EMOTION CLINIC</div>
+      <div class="pill-nav" onclick="alert('待合室の様子を集計中...')">
+        <span class="pill-hint">待合室の様子をのぞく</span>
+        <div class="pill-logo"></div>
+      </div>
+    </div>
+
+    <div class="room">
+      <div class="doc-box">
+        <div class="doc-img">👩‍⚕️</div>
+        <div class="bubble" id="docSpeech">
+          こんにちは。今日のお顔を見せてくださいね。
+        </div>
+      </div>
+
+      <div class="monitor" id="monitorFrame">
+        <div class="scan-line"></div>
+        <div class="scan-log" id="scanLog">
+          ANALYZING FACIAL MESH...
+        </div>
+        <div class="doc-whisper" id="docWhisper"></div>
+        <video id="video" autoplay playsinline muted></video>
+      </div>
+
+      <div id="hanko">処方済</div>
+
+      <div class="footer">
+        <div id="menu">待機中...</div>
+        <button id="judgeBtn" class="btn">先生に診てもらう</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const bgm = document.getElementById('bgm');
+    const welcome = document.getElementById('welcome-screen');
+    const video = document.getElementById('video');
+    const btn = document.getElementById('judgeBtn');
+    const speech = document.getElementById('docSpeech');
+    const whisper = document.getElementById('docWhisper');
+    const menu = document.getElementById('menu');
+    const frame = document.getElementById('monitorFrame');
+    const log = document.getElementById('scanLog');
+
+    // 1. 入店アクション（エフェクト付き）
+    function enterCafe() {
+      // BGM再生
+      bgm.volume = 0;
+      bgm.play();
+      let vol = 0;
+      const fadeIn = setInterval(() => {
+        if (vol < 0.2) { vol += 0.01; bgm.volume = vol; }
+        else { clearInterval(fadeIn); }
+      }, 300);
+
+      initCamera();
+
+      // 診察室に入るエフェクト：ゆっくり透かして拡大しながら消える
+      welcome.style.opacity = "0";
+      welcome.style.transform = "scale(1.1)";
+      setTimeout(() => { 
+        welcome.style.display = "none"; 
+      }, 1200);
+    }
+
+    async function initCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        video.srcObject = stream;
+      } catch (err) {
+        speech.innerHTML = "カメラの準備をお願いしますね。";
+      }
+    }
+
+    const whisperPatterns = [
+      ["うんうん、なるほど…", "少し緊張してるかな？", "お疲れが溜まってそうね…", "大丈夫、わかりますよ。"],
+      ["じっくり診ますね…", "最近、頑張りすぎちゃった？", "肩の力を抜いていいですよ", "ふむふむ、そうですね。"],
+      ["深呼吸、してみましょうか", "無理して笑わなくていいのよ", "心の声を聴いています…", "いい感じですよ。"]
+    ];
+
+    // 2. 診察アクション
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      frame.classList.add('scanning');
+      speech.innerHTML = "はい、じっくり診させていただきますね。そのままリラックスして…。";
+      menu.innerText = "診断中...";
+
+      const logs = ["EYE_POSITION: OK", "MOUTH_ANGLE: SCAN...", "STRESS_DATA: GET", "SUCCESS"];
+      let li = 0;
+      const logInterval = setInterval(() => {
+        log.innerHTML += `<br>${logs[li++]}`;
+        if(li >= logs.length) clearInterval(logInterval);
+      }, 800);
+
+      const selectedPattern = whisperPatterns[Math.floor(Math.random() * whisperPatterns.length)];
+      let w = 0;
+      whisper.innerText = selectedPattern[0];
+      const whisperInterval = setInterval(() => {
+        w++;
+        if(w < selectedPattern.length) {
+          whisper.style.opacity = 0;
+          setTimeout(() => {
+            whisper.innerText = selectedPattern[w];
+            whisper.style.opacity = 1;
+          }, 400);
+        } else { clearInterval(whisperInterval); }
+      }, 1600);
+
+      setTimeout(() => {
+        frame.classList.remove('scanning');
+        // 顔解析側が判定した感情を取得し、isHappy に反映する
+        const emotion = typeof recommendMenu === 'function' ? recommendMenu() : null;
+        const isHappy = emotion === "happy";
+        const isSad = emotion === "sad";
+        const isTired = emotion === "tired";
+        const isNeutral = emotion === "neutral";
+
+        if (isHappy) {
+          speech.innerHTML = "キラキラした素敵な笑顔！でも、無理は禁物ですよ。毎日頑張っている自分を、たまにはたっぷり甘やかしてあげてね。";
+        } else if (isSad) {
+          speech.innerHTML = "あら、少しお疲れのようね。頑張りすぎた証拠です。今はゆっくり深呼吸して、自分を一番に大切にしてあげて。";
+        } else if (isNeutral) {
+          // neutral扱いはお疲れモードのメッセージをそのまま使用
+          speech.innerHTML = "あら、少しお疲れのようね。頑張りすぎた証拠です。今はゆっくり深呼吸して、自分を一番に大切にしてあげて。";
+        } else if (isTired) {
+          speech.innerHTML = "ちょっとそわそわしているみたいですね。そんなときは一度深呼吸。焦らなくても大丈夫、自分のペースでいきましょう。";
+        } else {
+          // それ以外の感情（angry、surprised など）
+          speech.innerHTML = emotion ? `検出された感情：${emotion}` : "診断できました。 ";
+        }
+
+        document.getElementById('mainApp').classList.add('stamped');
+        setTimeout(() => {
+          btn.innerText = "処方箋を受け取る";
+          btn.disabled = false;
+          btn.style.background = "linear-gradient(135deg, #ff9f7b, #ff6b6b)";
+        }, 800);
+      }, 7000); 
+    });
+
+    document.getElementById("pill-nav").onclick = (e) => {
+      window.location.href = 'stats.html'; /* stats.html への遷移 */
+    };
+  </script>
+  <!-- Mediapipe dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <!-- your main script -->
+  <script type ="module" src="script.js"></script>
+</body>
+</html>

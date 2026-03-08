@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心の待合室 - 統計レポート</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        body { 
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif; 
+            background: #f0f4ff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            color: #555;
+        }
+        .container { 
+            width: 90%; 
+            max-width: 420px; 
+            background: #ffffff; 
+            padding: 40px 24px 80px; 
+            border-radius: 35px; 
+            box-shadow: 0 20px 40px rgba(100, 120, 180, 0.1); 
+            position: relative; 
+            text-align: center;
+        }
+        .header-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            color: #b0bbc9;
+            margin-bottom: 8px;
+        }
+        h2 { font-size: 1.3rem; color: #333; margin-top: 0; margin-bottom: 8px; }
+        p.subtitle { color: #8fa0b3; font-size: 0.85rem; margin-bottom: 25px; line-height: 1.6; }
+
+        /* お医者さんメッセージエリア */
+        .doctor-chat {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .doctor-avatar {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+        .message-bubble {
+            background: white;
+            border: 2px solid #7c92e6; /* 処方箋ボタンの色に合わせた青 */
+            border-radius: 18px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #4a5568;
+            position: relative;
+            flex: 1;
+        }
+        /* 吹き出しのしっぽ */
+        .message-bubble::after {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 15px;
+            border-style: solid;
+            border-width: 8px 8px 8px 0;
+            border-color: transparent #7c92e6 transparent transparent;
+        }
+        .message-bubble::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 15px;
+            border-style: solid;
+            border-width: 8px 8px 8px 0;
+            border-color: transparent white transparent transparent;
+            z-index: 1;
+        }
+
+        .main-card {
+            background: #fafbff;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #edf2ff;
+            margin-bottom: 20px;
+        }
+        .chart-container { 
+            width: 100%; 
+            height: 250px; 
+            margin: 0 auto; 
+        }
+
+        .stat-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #d0d9f0;
+        }
+        .label { font-size: 0.75rem; color: #a0aec0; }
+        .price { 
+            font-size: 0.85rem; 
+            color: #7c92e6; 
+            background: #eff4ff; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+        }
+        
+        .back-btn { 
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            padding: 14px; 
+            cursor: pointer; 
+            border-radius: 18px; 
+            border: none; 
+            background: #eef2ff; 
+            color: #6a7bb3; 
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover { background: #e0e7ff; transform: translateX(-50%) translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-label">MENTAL CLINIC STATISTICS</div>
+        <h2>みんなの心の待合室</h2>
+        <p class="subtitle">今の時間、みんなはどんな気持ちで過ごしているでしょうか。</p>
+
+        <div class="doctor-chat">
+            <div class="doctor-avatar">👩‍⚕️</div>
+            <div class="message-bubble" id="doctor-text">
+                こんにちは。今の待合室の様子を、集計してお伝えしますね。
+            </div>
+        </div>
+
+        <div class="main-card">
+            <div class="chart-container">
+                <canvas id="emotionChart"></canvas>
+            </div>
+            <div class="stat-info">
+                <span class="label">更新頻度：リアルタイム</span>
+                <span class="price">診察中</span>
+            </div>
+        </div>
+
+        <button class="back-btn" onclick="location.href='index.html'">感情の診察に戻る</button>
+    </div>
+    <script type="module" src="stats.js"></script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>幸せなあなたへのおくすり手帳</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* 既存のスタイルを維持 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #e3f2ff 0, #f4f5f7 45%, #e9ecf5 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      height: 100vh;
+      max-height: 840px;
+      background: #fafafa;
+      border-radius: 28px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(to bottom, rgba(200, 210, 230, 0.25) 1px, transparent 1px);
+      background-size: 100% 32px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .header {
+      padding: 16px 20px 10px;
+      background: linear-gradient(135deg, #fdfbff, #f3f7ff);
+      border-bottom: 1px solid #dde3f0;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* hinapiko.html から採用した配置スタイル */
+    .header-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pill-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-left: auto; /* 右寄せにする */
+      white-space: nowrap;
+    }
+
+    .pill-hint {
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
+      background: #4da3ff;
+      padding: 4px 10px;
+      border-radius: 12px;
+      position: relative;
+      animation: float 3s infinite ease-in-out; /* ふわふわアニメーション */
+    }
+
+    .pill-hint::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 5px 0 5px 6px;
+      border-style: solid;
+      border-color: transparent transparent transparent #4da3ff;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(-5px); }
+    }
+
+    .pill-logo {
+      width: 34px;
+      height: 17px;
+      background: linear-gradient(90deg, #4da3ff 50%, #fff 50%);
+      border-radius: 10px;
+      border: 2px solid #4da3ff;
+      transform: rotate(-15deg);
+    }
+
+    .header-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .order-button {
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+    .order-button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    .header-label { font-size: 11px; color: #7c8bb0; }
+    .header-title { font-size: 18px; font-weight: 700; color: #333; }
+    .header-sub { font-size: 11px; color: #8a94b0; }
+
+    /* 以下、カードやボタンのスタイルは変更なし */
+    .pager-container { flex: 1; position: relative; overflow: hidden; padding-bottom: 70px; z-index: 1; }
+    .pages { display: flex; width: 400%; height: 100%; transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1); }
+    .page { width: 25%; padding: 22px 20px 10px; display: flex; justify-content: center; align-items: center; }
+    .card { width: 92%; background: #ffffff; border-radius: 18px; padding: 20px 18px 22px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12); display: flex; flex-direction: column; gap: 14px; }
+    .card-header-title { font-size: 18px; letter-spacing: 0.3em; color: #7f8bb0; font-weight: 800; text-align: center; }
+    .card-image { width: 100%; height: 230px; border-radius: 14px; overflow: hidden; }
+    .card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .card-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 18px; font-weight: 700; color: #333; }
+    .card-price { font-size: 14px; color: #44518a; background: #f0f4ff; padding: 4px 8px; border-radius: 8px; }
+    .card-dose { font-size: 12px; color: #8a94b0; }
+    .card-desc { font-size: 13px; color: #555; line-height: 1.55; }
+    .card-footer { display: flex; justify-content: flex-end; }
+    .order-button { padding: 9px 18px; border-radius: 999px; border: none; background: linear-gradient(135deg, #ff9f7b, #ff6b6b); color: #fff; font-size: 13px; font-weight: 600; }
+    .back-button { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); padding: 11px 20px; border-radius: 12px; border: none; background: #dfe7ff; color: #3a4a7a; font-size: 13px; font-weight: 600; width: 82%; cursor: pointer; z-index: 100; box-shadow: 0 6px 14px rgba(90, 112, 180, 0.35); display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="header-inner">
+        <div class="pill-nav" id="toStats">
+          <span class="pill-hint">待合室の様子をのぞく</span>
+          <div class="pill-logo"></div>
+        </div>
+
+        <div class="header-title-block">
+          <div class="header-label">MENTAL PRESCRIPTION NOTE</div>
+          <div class="header-title">幸せなあなたへのおくすり</div>
+          <div class="header-sub">笑顔の裏で、本当は無理してない？</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pager-container" id="pager">
+      <div class="pages" id="pages">
+        <div class="page">
+          <div class="card">
+            <div class="card-header-title">処方箋</div> 
+            <div class="card-image"><img src="https://www.marukome.co.jp/files/recipe/4958/63a51f6e-f810-4398-9a4a-45b10a0001f7.jpg?tm=1672117683" /></div>
+            <div class="card-header-row"><div class="card-title">お疲れ様栄養スープ</div><div class="card-price">¥660</div></div>
+            <div class="card-dose">服用時間：残業後</div>
+            <div class="card-desc">野菜のやさしい味わいで、からだの奥からじんわりほっとするスープ。疲れた心と体に、癒やしを。</div>
+            <div class="card-footer"><button class="order-button">受け取る</button></div>
+          </div>
+        </div>
+        <div class="page">
+          <div class="card">
+            <div class="card-header-title">処方箋</div>
+            <div class="card-image"><img src="https://d1f5hsy4d47upe.cloudfront.net/0e/0ee37c7abebccfaa2a4e6c8d0e9cfecd_t.jpeg" /></div>
+            <div class="card-header-row"><div class="card-title">秘密のご褒美プリン</div><div class="card-price">¥550</div></div>
+            <div class="card-dose">服用時間：素直に悲しめないときに</div>
+            <div class="card-desc">とろけるプリンは、あなただけのご褒美スイーツ。ほっこり甘くて、心がそっと温まります。</div>
+            <div class="card-footer"><button class="order-button">受け取る</button></div>
+          </div>
+        </div>
+        <div class="page">
+  <div class="card">
+    <div class="card-header-title">処方箋</div>
+    <div class="card-image">
+      <img src="https://mi-journey.jp/foodie/wp-content/uploads/2018/10/ba71e580a995f970aad63062a310bf32.jpg" />
+    </div>
+    <div class="card-header-row">
+      <div class="card-title">深呼吸ミルクティー</div>
+      <div class="card-price">¥550</div>
+    </div>
+    <div class="card-dose">服用時間：頑張りすぎてハイテンションなときに。
+    </div>
+    <div class="card-desc">ふわっと香るミルクと紅茶で、思わず深呼吸したくなる一杯。跳ねている心をやさしく落ち着かせてくれます。</div>
+    <div class="card-footer">
+      <button class="order-button">受け取る</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="card">
+    <div class="card-header-title">処方箋</div>
+    <div class="card-image">
+      <img src="https://t4.ftcdn.net/jpg/01/37/54/21/360_F_137542119_lmyDMnAebBd1Q1UfRt68ko5SxKwodowE.jpg" />
+    </div>
+    <div class="card-header-row">
+      <div class="card-title">ほっと一息ホットココア</div>
+      <div class="card-price">¥660</div>
+    </div>
+    <div class="card-dose">処方量：ひと息つきたいときに</div>
+    <div class="card-desc">甘さ控えめで、カフェインレスのホットココア。そっと手に取り、心もからだもぽかぽかになれるやさしいひとときを提供。</div>
+    <div class="card-footer">
+      <button class="order-button">受け取る</button>
+    </div>
+  </div>
+</div>
+      </div>
+    </div>
+
+    <button class="back-button" id="backToIntex">感情の診察に戻る</button>
+  </div>
+
+  <script>
+    const pagesEl = document.getElementById("pages");
+    const pagerEl = document.getElementById("pager");
+    let currentPage = 0;
+    let startX = 0;
+    let isDragging = false;
+
+    function updatePage() {
+      pagesEl.style.transform = `translateX(${currentPage * -25}%)`;
+    }
+
+    function handleSwipe(deltaX) {
+      const threshold = 60;
+      if (deltaX < -threshold && currentPage < 3) { currentPage++; updatePage(); }
+      else if (deltaX > threshold && currentPage > 0) { currentPage--; updatePage(); }
+    }
+
+    const startEvent = (x) => { isDragging = true; startX = x; };
+    const moveEvent = (x) => {
+      if (!isDragging) return;
+      handleSwipe(x - startX);
+      isDragging = false;
+    };
+
+    pagerEl.addEventListener("touchstart", (e) => {
+      if (e.target.closest('button') || e.target.closest('.pill-nav')) return;
+      startEvent(e.touches[0].clientX);
+    });
+    pagerEl.addEventListener("touchend", (e) => moveEvent(e.changedTouches[0].clientX));
+    pagerEl.addEventListener("mousedown", (e) => {
+      if (e.target.closest('button') || e.target.closest('.pill-nav')) return;
+      startEvent(e.clientX);
+    });
+    pagerEl.addEventListener("mouseup", (e) => moveEvent(e.clientX));
+
+    // ボタンの動作設定
+    document.getElementById("backToIntex").onclick = (e) => {
+      window.location.href = 'index.html';
+    };
+    document.getElementById("toStats").onclick = (e) => {
+      window.location.href = 'stats.html'; /* stats.html への遷移 */
+    };
+  </script>
+</body>
+</html>
