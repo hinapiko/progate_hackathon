@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAcgNvtSQ-J--hsGhw-dgJquJp6JHFlXAc",
+    apiKey: "dummy-api-key-for-hackathon",
     authDomain: "hacktest-a8013.firebaseapp.com",
     projectId: "hacktest-a8013",
     storageBucket: "hacktest-a8013.firebasestorage.app",
